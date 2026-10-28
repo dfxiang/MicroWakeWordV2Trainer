@@ -2,6 +2,10 @@
 
 [English](README.en.md) | [简体中文](README.md)
 
+<p align="center">
+  <img src="docs/images/wakeword-studio.png" alt="Wakeword Studio control panel" width="100%">
+</p>
+
 Train [microWakeWord](https://github.com/kahrendt/microWakeWord) V2 wake-word
 models locally. This fork keeps the original training pipeline while adding
 an HTML control panel, CPU container deployment, persistent workspaces, and
@@ -12,6 +16,7 @@ network configurations suitable for long-running local use.
 | Capability | Description |
 | --- | --- |
 | **HTML web control panel** | Configure the project and run every pipeline step from a browser without opening Jupyter. Includes live logs, job cancellation, audio previews, and model downloads. |
+| **Chinese and English UI** | Switch the control panel language from the header at any time. Chinese is the default, and the browser remembers the selected language. |
 | **CPU container deployment** | `Dockerfile.cpu` and Docker Compose package the complete runtime with PyTorch CPU wheels and persistent storage. |
 | **Remote access** | Port `8188` binds to all host interfaces by default for LAN or VPN access; it can be restricted to localhost. |
 | **Persistent workspace** | Samples, datasets, checkpoints, logs, and exports stay in the host `workspace/` directory when the container is recreated. |

@@ -2,6 +2,10 @@
 
 [简体中文](README.md) | [English](README.en.md)
 
+<p align="center">
+  <img src="docs/images/wakeword-studio.png" alt="Wakeword Studio 控制台界面" width="100%">
+</p>
+
 在本地训练 [microWakeWord](https://github.com/kahrendt/microWakeWord) V2 唤醒词模型。项目沿用原 Colab Notebook 的核心训练流程，并增加了适合本地长期使用的 HTML 控制台、CPU 容器化部署、任务日志和持久化工作区。
 
 本仓库是在原项目基础上的增强版，主要优化包括：
@@ -9,6 +13,7 @@
 | 优化 | 说明 |
 | --- | --- |
 | **Web HTML 控制台** | 无需打开 Jupyter Notebook。通过浏览器完成配置、发音预览、样本生成、数据下载、特征构建、训练、模型导出和日志查看。 |
+| **中英文界面** | 控制台顶部可随时切换中文和英文，默认中文，并记住当前浏览器的语言选择。 |
 | **CPU 容器化部署** | 提供独立的 `Dockerfile.cpu` 和 `docker compose` 配置。镜像使用 PyTorch CPU wheel，不包含不可用的 CUDA 运行时。 |
 | **远程访问** | 默认将 `8188` 映射到宿主机所有网卡，可从局域网或 VPN 远程访问；也可通过环境变量限制为仅本机访问。 |
 | **持久化数据** | 样本、数据集、模型、日志和配置保存在宿主机 `workspace/`，重建容器不会删除训练结果。 |
