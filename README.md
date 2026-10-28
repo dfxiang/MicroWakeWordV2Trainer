@@ -68,6 +68,10 @@ docker compose logs -f trainer
 
 环境变量示例：[.env.example](.env.example)
 
+Docker Compose 会将 `/opt/venv` 保存到 `trainer-venv` 命名卷，避免容器重建后
+Setup 安装的 Python 依赖丢失。`docker compose down` 会保留该卷；
+`docker compose down -v` 会删除它，需要重新运行 Setup。
+
 常用环境变量：
 
 | 变量 | 默认值 | 说明 |

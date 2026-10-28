@@ -26,12 +26,42 @@ import shutil
 import subprocess
 import sys
 import urllib.request
+from importlib.metadata import PackageNotFoundError, distribution
 from pathlib import Path
 
 from trainer.local.config import TrainerConfig
 
 MICROWAKEWORD_REPO = "https://github.com/kahrendt/microWakeWord.git"
 PIPER_SAMPLE_GENERATOR_REPO = "https://github.com/rhasspy/piper-sample-generator.git"
+REQUIRED_RUNTIME_MODULES = (
+    "microwakeword",
+    "piper",
+    "piper_sample_generator",
+    "tensorflow",
+    "torch",
+)
+MODULE_PACKAGES = {
+    "microwakeword": "microwakeword",
+    "piper": "piper-tts",
+    "piper_sample_generator": "piper-sample-generator",
+    "tensorflow": "tensorflow",
+    "torch": "torch",
+}
+
+
+def missing_modules(modules: tuple[str, ...]) -> list[str]:
+    missing = []
+    for module in modules:
+        package = MODULE_PACKAGES.get(module, module)
+        try:
+            distribution(package)
+        except PackageNotFoundError:
+            missing.append(module)
+    return missing
+
+
+def missing_runtime_modules() -> list[str]:
+    return missing_modules(REQUIRED_RUNTIME_MODULES)
 
 
 def _run(cmd: list[str], **kwargs) -> None:
@@ -100,6 +130,13 @@ def run(config: TrainerConfig) -> None:
     # metrics, which needs tensorboard even though nothing actually views
     # the logs - it's not in microWakeWord's own dependency list.
     _run([sys.executable, "-m", "pip", "install", "tensorboard"])
+
+    missing = missing_runtime_modules()
+    if missing:
+        raise RuntimeError(
+            "Setup finished, but these required Python modules are still missing: "
+            + ", ".join(missing)
+        )
 
     print("\nSetup complete.")
     print(f"  microWakeWord: {config.mww_repo_dir}")

@@ -79,6 +79,10 @@ machine. Use the page to:
 
 All generated data, checkpoints, logs, and exported models live in the local
 `workspace/` directory, so recreating the container does not delete them.
+Docker Compose also stores `/opt/venv` in the `trainer-venv` named volume so
+Python dependencies installed by Setup survive container recreation.
+`docker compose down` keeps the volume; `docker compose down -v` removes it
+and requires running Setup again.
 The environment variable `HF_TOKEN` is optional and can be set in `.env`
 (copy `.env.example` as a starting point).
 The control panel has no authentication. When exposing it beyond the host,
@@ -104,9 +108,11 @@ docker compose down
 ```
 
 The first **Setup** action clones microWakeWord and Piper, then installs their
-Python dependencies inside the container. It can take several minutes. Run it
-again after recreating the container; existing clones and generated data are
-reused. This CPU image intentionally does not enable GPU passthrough.
+Python dependencies into the persisted virtual environment. It can take
+several minutes. Run it again only after deleting the `trainer-venv` volume or
+if the control panel reports that Setup is incomplete; existing clones and
+generated data are reused. This CPU image intentionally does not enable GPU
+passthrough.
 
 ## How long does training take
 

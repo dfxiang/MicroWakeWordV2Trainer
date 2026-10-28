@@ -26,5 +26,9 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./workspace:/data
+      - trainer-venv:/opt/venv
     shm_size: "2gb"
     stop_grace_period: 30s
+
+volumes:
+  trainer-venv:

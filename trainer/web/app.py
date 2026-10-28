@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
 import os
 import platform
 import shutil
@@ -19,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from trainer.local.config import TrainerConfig, load_config
 from trainer.local.export import TFLITE_SOURCE_RELATIVE
+from trainer.local.setup_env import missing_runtime_modules
 from trainer.web.jobs import (
     JobAlreadyRunning,
     JobManager,
@@ -96,10 +96,7 @@ def _feature_split_done(config: TrainerConfig, split: str) -> bool:
 
 
 def _python_dependencies_installed() -> bool:
-    return all(
-        importlib.util.find_spec(module) is not None
-        for module in ("microwakeword", "piper_sample_generator", "tensorflow", "torch")
-    )
+    return not missing_runtime_modules()
 
 
 def _preview_file(config: TrainerConfig) -> Optional[Path]:
