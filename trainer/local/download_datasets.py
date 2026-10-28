@@ -44,7 +44,6 @@ import soundfile as sf
 
 from trainer.local.config import TrainerConfig
 
-NEGATIVE_DATASET_BASE_URL = "https://huggingface.co/datasets/kahrendt/microwakeword/resolve/main/"
 NEGATIVE_DATASET_FILES = ["dinner_party.zip", "dinner_party_eval.zip", "no_speech.zip", "speech.zip"]
 
 RIR_REPO = "davidscripka/MIT_environmental_impulse_responses"
@@ -54,6 +53,14 @@ AUDIOSET_REPO = "agkphysics/Audioset"
 
 def _hf_token(config: TrainerConfig) -> Optional[str]:
     return os.environ.get(config.datasets.hf_token_env) or None
+
+
+def _hf_endpoint() -> str:
+    return os.environ.get("HF_ENDPOINT", "https://huggingface.co").rstrip("/")
+
+
+def _negative_dataset_url(filename: str) -> str:
+    return f"{_hf_endpoint()}/datasets/kahrendt/microwakeword/resolve/main/{filename}"
 
 
 def _dir_has_files(path: Path) -> bool:
@@ -71,10 +78,6 @@ def _write_wav_16k(array: np.ndarray, orig_sr: int, dest: Path) -> None:
 
 
 def download_mit_rirs(config: TrainerConfig) -> None:
-    if _dir_has_files(config.rir_dir):
-        print(f"{config.rir_dir} already populated, skipping MIT RIR download")
-        return
-
     from huggingface_hub import HfApi, hf_hub_download
 
     print("Downloading MIT environmental impulse response dataset...")
@@ -83,9 +86,17 @@ def download_mit_rirs(config: TrainerConfig) -> None:
     files = [f for f in api.list_repo_files(RIR_REPO, repo_type="dataset") if f.startswith("16khz/") and f.endswith(".wav")]
 
     config.rir_dir.mkdir(parents=True, exist_ok=True)
+    missing = [filename for filename in files if not (config.rir_dir / Path(filename).name).exists()]
+    if not missing:
+        print(f"{config.rir_dir} already populated, skipping MIT RIR download")
+        return
+
     for i, filename in enumerate(files, 1):
+        destination = config.rir_dir / Path(filename).name
+        if destination.exists():
+            continue
         local_path = hf_hub_download(repo_id=RIR_REPO, repo_type="dataset", filename=filename, token=token)
-        shutil.copyfile(local_path, config.rir_dir / Path(filename).name)
+        shutil.copyfile(local_path, destination)
         if i % 50 == 0 or i == len(files):
             print(f"  {i}/{len(files)} RIR clips")
     print(f"Wrote {len(files)} RIR clips to {config.rir_dir}")
@@ -181,7 +192,7 @@ def download_negative_features(config: TrainerConfig) -> None:
             print(f"{dest_dir} already exists, skipping {filename}")
             continue
 
-        url = NEGATIVE_DATASET_BASE_URL + filename
+        url = _negative_dataset_url(filename)
         zip_path = config.negative_datasets_dir / filename
         print(f"Downloading {url} -> {zip_path}")
         urllib.request.urlretrieve(url, zip_path)
@@ -193,6 +204,14 @@ def download_negative_features(config: TrainerConfig) -> None:
 
 
 def run(config: TrainerConfig) -> None:
+    proxy_configured = bool(
+        os.environ.get("HTTPS_PROXY")
+        or os.environ.get("https_proxy")
+        or os.environ.get("ALL_PROXY")
+        or os.environ.get("all_proxy")
+    )
+    print(f"Using Hugging Face endpoint: {_hf_endpoint()}")
+    print(f"Network proxy: {'configured' if proxy_configured else 'not configured'}")
     download_mit_rirs(config)
     download_audioset(config)
     download_fma(config)

@@ -22,6 +22,7 @@ as a plain source directory without needing it packaged/installed.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 import urllib.request
@@ -40,8 +41,16 @@ def _run(cmd: list[str], **kwargs) -> None:
 
 def _clone_if_missing(repo_url: str, dest: Path) -> None:
     if dest.exists():
-        print(f"{dest} already exists, skipping clone")
-        return
+        probe = subprocess.run(
+            ["git", "-C", str(dest), "rev-parse", "--verify", "HEAD"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if probe.returncode == 0:
+            print(f"{dest} already exists, skipping clone")
+            return
+        print(f"{dest} is an incomplete clone, removing it before retrying")
+        shutil.rmtree(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
     _run(["git", "clone", "--depth", "1", repo_url, str(dest)])
 
